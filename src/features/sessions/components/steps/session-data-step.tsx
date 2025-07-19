@@ -16,6 +16,8 @@ import { ptBR } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';
 import { SessionFormData } from '@/types';
 import { cn } from '@/lib/utils';
+import { subDays as subDaysUtil } from 'date-fns';
+import React from 'react';
 
 interface SessionDataStepProps {
   data: SessionFormData['sessionData'];
@@ -30,8 +32,15 @@ export function SessionDataStep({ data, onChange }: SessionDataStepProps) {
         to: new Date(data.endDate)
       };
     }
+    // Inicializar com últimos 7 dias por padrão
+    const today = new Date();
+    const sevenDaysAgo = subDaysUtil(today, 7);
+    return { from: sevenDaysAgo, to: today };
     return undefined;
   });
+
+  // Opções do select multiselect (bloqueadas)
+  const [selectedOptions, setSelectedOptions] = useState<string[]>(['opcao1', 'opcao2']);
 
   const updateField = (field: keyof SessionFormData['sessionData'], value: string) => {
     onChange({ ...data, [field]: value });
@@ -51,6 +60,14 @@ export function SessionDataStep({ data, onChange }: SessionDataStepProps) {
       updateField('endDate', '');
     }
   };
+
+  // Inicializar range se não estiver definido
+  React.useEffect(() => {
+    if (!data.startDate && !data.endDate && dateRange?.from && dateRange?.to) {
+      updateField('startDate', format(dateRange.from, 'yyyy-MM-dd'));
+      updateField('endDate', format(dateRange.to, 'yyyy-MM-dd'));
+    }
+  }, []);
 
   const generateTimeOptions = () => {
     const times = [];
@@ -161,48 +178,68 @@ export function SessionDataStep({ data, onChange }: SessionDataStepProps) {
           <CardTitle className="text-beer-dark">Filtros para Busca de Amostras (Opcional)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Período de Produção das Amostras</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !dateRange && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange?.from ? (
-                    dateRange.to ? (
-                      <>
-                        {format(dateRange.from, 'dd/MM/yyyy', { locale: ptBR })} -{' '}
-                        {format(dateRange.to, 'dd/MM/yyyy', { locale: ptBR })}
-                      </>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Range de Data */}
+            <div className="space-y-2">
+              <Label>Período de Produção das Amostras</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dateRange && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange?.from ? (
+                      dateRange.to ? (
+                        <>
+                          {format(dateRange.from, 'dd/MM/yyyy', { locale: ptBR })} -{' '}
+                          {format(dateRange.to, 'dd/MM/yyyy', { locale: ptBR })}
+                        </>
+                      ) : (
+                        format(dateRange.from, 'dd/MM/yyyy', { locale: ptBR })
+                      )
                     ) : (
-                      format(dateRange.from, 'dd/MM/yyyy', { locale: ptBR })
-                    )
-                  ) : (
-                    "Selecione o período"
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={dateRange?.from}
-                  selected={dateRange}
-                  onSelect={handleDateRangeChange}
-                  numberOfMonths={2}
-                  locale={ptBR}
-                />
-              </PopoverContent>
-            </Popover>
+                      "Selecione o período"
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={dateRange?.from}
+                    selected={dateRange}
+                    onSelect={handleDateRangeChange}
+                    numberOfMonths={2}
+                    locale={ptBR}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Select Multiselect (Bloqueado) */}
+            <div className="space-y-2">
+              <Label>Configurações Automáticas</Label>
+              <Select disabled>
+                <SelectTrigger className="opacity-60">
+                  <SelectValue placeholder="Definido automaticamente pelo usuário" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="opcao1">Configuração 1</SelectItem>
+                  <SelectItem value="opcao2">Configuração 2</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Estas opções são configuradas automaticamente baseadas no seu perfil de usuário
+              </p>
+            </div>
           </div>
           
           <p className="text-sm text-muted-foreground">
-            Estes filtros serão aplicados na busca de amostras no próximo passo.
+            O período de produção será aplicado na busca de amostras no próximo passo.
             {dateRange?.from && dateRange?.to && (
               <span className="block mt-1 text-beer-dark font-medium">
                 Período selecionado: {format(dateRange.from, 'dd/MM/yyyy', { locale: ptBR })} até {format(dateRange.to, 'dd/MM/yyyy', { locale: ptBR })}

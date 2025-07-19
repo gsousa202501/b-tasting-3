@@ -14,6 +14,20 @@ const sessionApi = {
   createSession: async (session: Omit<TastingSession, 'id' | 'createdAt' | 'updatedAt'>): Promise<TastingSession> => {
     await new Promise(resolve => setTimeout(resolve, 1200));
 
+    const newSession: TastingSession = {
+      id: `session-${Date.now()}`,
+      nome: session.name,
+      data: session.date,
+      horario: session.time,
+      type: session.type,
+      status: session.status,
+      amostras: session.samples,
+      degustadores: session.tasters,
+      observacoes: session.observations,
+      criadoEm: new Date().toISOString(),
+      atualizadoEm: new Date().toISOString(),
+    };
+
     mockSessions.unshift(newSession); // Add to beginning of array
     return newSession;
   },

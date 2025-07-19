@@ -49,6 +49,10 @@ import { SessionDetailsDialog } from './session-details-dialog';
 import { toast } from 'sonner';
 import { LottieLoader } from '@/components/ui/lottie-loader';
 
+interface SessionsTableProps {
+  filteredSessions?: TastingSession[];
+}
+
 const statusConfig = {
   nao_iniciado: { label: 'Não Iniciado', variant: 'outline' as const },
   draft: { label: 'Rascunho', variant: 'secondary' as const },
@@ -61,8 +65,9 @@ const typeConfig = {
   extra: { label: 'Extra', variant: 'secondary' as const },
 };
 
-export function SessionsTable() {
-  const { data: sessions, isLoading, error } = useSessions();
+export function SessionsTable({ filteredSessions }: SessionsTableProps) {
+  const { data: allSessions, isLoading, error } = useSessions();
+  const sessions = filteredSessions || allSessions;
   const deleteSession = useDeleteSession();
   const completeSession = useCompleteSession();
   
@@ -132,10 +137,10 @@ export function SessionsTable() {
         <div className="text-center">
           <Beer className="mx-auto h-12 w-12 text-beer-medium opacity-50" />
           <h3 className="mt-4 text-lg font-semibold text-beer-dark">
-            Nenhuma sessão encontrada
+            {filteredSessions ? 'Nenhuma sessão encontrada com os filtros aplicados' : 'Nenhuma sessão encontrada'}
           </h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            Comece criando sua primeira sessão de degustação.
+            {filteredSessions ? 'Ajuste os filtros para ver mais resultados.' : 'Comece criando sua primeira sessão de degustação.'}
           </p>
         </div>
       </div>
